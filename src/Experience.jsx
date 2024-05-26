@@ -1,8 +1,9 @@
 import { Box, OrbitControls } from '@react-three/drei'
-import Lights from './Lights.jsx'
-import Skateboard from './Skateboard.jsx'
 import { Suspense } from 'react'
 import { Physics, RigidBody } from '@react-three/rapier'
+import Lights from './Lights.jsx'
+import Skateboard from './Skateboard.jsx'
+import Loader from './Loader.jsx'
 
 
 export default function Experience()
@@ -24,7 +25,7 @@ export default function Experience()
                 </mesh>
             </RigidBody>
 
-            <Suspense fallback={null}>
+            <Suspense fallback={<Loader />}>
                 <Skateboard />
             </Suspense>
         </Physics>
