@@ -1,7 +1,7 @@
 import { useGLTF, useKeyboardControls } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
-import { CuboidCollider, RigidBody } from '@react-three/rapier'
-import { useState, useRef } from 'react'
+import { CuboidCollider, RigidBody, useRapier } from '@react-three/rapier'
+import { useState, useRef, useEffect } from 'react'
 import * as THREE from 'three'
 
 export default function Skateboard() {
@@ -11,17 +11,47 @@ export default function Skateboard() {
 
     const body = useRef()
     const [subscribeKeys, getKeys] = useKeyboardControls()
+    const { rapier, world } = useRapier()
+
+    const jump = () =>
+    {
+        const origin = body.current.translation()
+        const direction = { x: 0, y: - 1, z: 0 }
+        const ray = new rapier.Ray(origin, direction)
+        const hit = world.castRay(ray, 10, true)
+        // hit.solid = true
+        if(hit.toi < 0.15)
+        {
+            body.current.applyImpulse({ x: 0, y: 0.1, z: 0 })
+        }
+        console.log(hit.toi)
+    }
+
+    useEffect(() =>
+    {
+        subscribeKeys(
+            // Selector
+            (state) => state.jump,
+            // Call Function
+            (value) =>
+            {
+                if(value)
+                {
+                    jump()
+                }
+            }
+        )
+    }, [])
 
     const [smoothedCameraPosition] = useState(() => new THREE.Vector3())
     const [smoothedCameraTarget] = useState(() => new THREE.Vector3())
 
-    const initialSpeed = 0
+    let currentSpeed = 0
     const maxSpeed = 10
     const acceleration = 0.05
     const deceleration = 0.03
-    const rotationSpeed = 1.5
-
-    let currentSpeed = initialSpeed
+    const rotationSpeed = 3
+    
     const impulse = new THREE.Vector3()
 
     useFrame((state, delta) => {
@@ -81,8 +111,6 @@ export default function Skateboard() {
         body.current.setRotation(bodyQuaternion)
         impulse.copy(skateboardDirection).multiplyScalar(currentSpeed)
         body.current.setLinvel({ x: impulse.x, y: body.current.linvel().y, z: impulse.z })
-
-        // Optional: Apply damping to slow down more naturally
         body.current.setLinearDamping(1)
     })
 

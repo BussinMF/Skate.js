@@ -17,7 +17,7 @@ export default function Experience()
         <Box position-x={ 1 } position-z={ 1 } />
 
         <Physics debug>
-            <RigidBody type='fixed' friction={ 1 }>
+            <RigidBody friction={ 1 }>
                 <mesh position-y={ -0.2 } receiveShadow rotation-x={ - Math.PI * 0.5 } scale={ 100 }>
                     <planeGeometry />
                     <meshStandardMaterial color="black" />
