@@ -5,9 +5,8 @@ import { useState, useRef, useEffect } from 'react'
 import * as THREE from 'three'
 
 export default function Skateboard() {
-    const skateboardScene = useGLTF('./skateboard/aaa.gltf')
-    skateboardScene.scene.children[0].name = 'skateboard'
-    const skateboard = skateboardScene.scene.children[0]
+    const skateboardScene = useGLTF('./skateboard/skateboard.glb')
+    const skateboard = skateboardScene.scene
 
     const body = useRef()
     const [subscribeKeys, getKeys] = useKeyboardControls()
