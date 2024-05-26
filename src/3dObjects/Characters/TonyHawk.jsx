@@ -1,13 +1,23 @@
-import { useGLTF } from '@react-three/drei';
-import React from 'react';
+import { useAnimations, useGLTF } from '@react-three/drei';
+import React, { useRef } from 'react';
 
 export const CharacterTonyHawk = ({boardVisibility = false}) => {
 
   const { nodes, materials } = useGLTF('./character/tonyhawk/tony_t_pose.glb');
+  const { nodes: idleNodes, animations: idleAnimations } = useGLTF('./character/animations/FE_Main_Idle_BoardSpin.glb');
+  const group = useRef();
+  const allAnimations = [ ...idleAnimations];
+  const { actions } = useAnimations(allAnimations, group);
 
+  React.useEffect(() => {
+    console.log(nodes)
+    Object.keys(actions).forEach(action => {
+      actions[action].play();
+    });
+  }, [actions]);
 
   return (
-    <group dispose={null}>
+    <group ref={group} dispose={null}>
 
       <group name='skateboard' visible={boardVisibility}>
             <skinnedMesh
@@ -60,3 +70,5 @@ export const CharacterTonyHawk = ({boardVisibility = false}) => {
 }
 
 useGLTF.preload('./character/tonyhawk/tonyHawk.glb');
+useGLTF.preload('./character/animations/FE_Main_Idle_BoardSpin.glb');
+
