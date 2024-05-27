@@ -16,17 +16,18 @@ export default function Experience()
 
         <Lights />
 
-        <Box position-x={ 1 } position-z={ 1 } />
+        {/* <Box position-x={ 1 } position-z={ 1 } /> */}
 
         <Physics debug>
-            <RigidBody friction={ 1 }>
+            {/* <RigidBody friction={ 1 }>
                 <mesh position-y={ -0.2 } receiveShadow rotation-x={ - Math.PI * 0.5 } scale={ 100 }>
                     <planeGeometry />
                     <meshStandardMaterial color="black" />
                 </mesh>
-            </RigidBody>
+            </RigidBody> */}
 
             <Suspense fallback={<Loader />}>
+                <Skatepark />
                 <Skateboard />
                 {/* <Skatepark /> */}
             </Suspense>
