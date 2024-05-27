@@ -15,14 +15,9 @@ export default function Experience()
 
         <Lights />
 
-        <Box position-x={ 1 } position-z={ 1 } />
-
         <Physics debug>
-            <RigidBody friction={ 1 }>
-                <mesh position-y={ -0.2 } receiveShadow rotation-x={ - Math.PI * 0.5 } scale={ 100 }>
-                    <planeGeometry />
-                    <meshStandardMaterial color="black" />
-                </mesh>
+            <RigidBody friction={ 1 } type='fixed'>
+                <Box args={[100, 100, 0.1]} material-color="darkgrey" position-y={ -0.2 } receiveShadow rotation-x={ - Math.PI * 0.5 } scale={ 1 }/>
             </RigidBody>
 
             <Suspense fallback={<Loader />}>

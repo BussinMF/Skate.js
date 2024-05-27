@@ -1,6 +1,6 @@
 import { useGLTF, useKeyboardControls } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
-import { CuboidCollider, RigidBody, useRapier } from '@react-three/rapier'
+import { CuboidCollider, CylinderCollider, RigidBody, useRapier } from '@react-three/rapier'
 import { useState, useRef, useEffect } from 'react'
 import * as THREE from 'three'
 
@@ -12,16 +12,26 @@ export default function Skateboard() {
     const [subscribeKeys, getKeys] = useKeyboardControls()
     const { rapier, world } = useRapier()
 
+    const [smoothedCameraPosition] = useState(() => new THREE.Vector3())
+    const [smoothedCameraTarget] = useState(() => new THREE.Vector3())
+
+    let currentSpeed = 0
+    const maxSpeed = 10
+    const acceleration = 0.05
+    const deceleration = 0.03
+    const rotationSpeed = 3
+    
+    const impulse = new THREE.Vector3()
+
     const jump = () =>
     {
         const origin = body.current.translation()
         const direction = { x: 0, y: - 1, z: 0 }
         const ray = new rapier.Ray(origin, direction)
         const hit = world.castRay(ray, 10, true)
-        // hit.solid = true
         if(hit.toi < 0.15)
         {
-            body.current.applyImpulse({ x: 0, y: 0.1, z: 0 })
+            body.current.applyImpulse({ x: 0, y: 0.03 , z: 0 })
         }
         console.log(hit.toi)
     }
@@ -41,17 +51,6 @@ export default function Skateboard() {
             }
         )
     }, [])
-
-    const [smoothedCameraPosition] = useState(() => new THREE.Vector3())
-    const [smoothedCameraTarget] = useState(() => new THREE.Vector3())
-
-    let currentSpeed = 0
-    const maxSpeed = 10
-    const acceleration = 0.05
-    const deceleration = 0.03
-    const rotationSpeed = 3
-    
-    const impulse = new THREE.Vector3()
 
     useFrame((state, delta) => {
         /**
@@ -80,7 +79,7 @@ export default function Skateboard() {
         /**
          * skateboard controls
          */
-        const { forward, backward, leftward, rightward, jump } = getKeys()
+        const { forward, backward, leftward, rightward, jump, resetRotation } = getKeys()
 
         const bodyQuaternion = new THREE.Quaternion()
         bodyQuaternion.copy(body.current.rotation())
@@ -107,6 +106,11 @@ export default function Skateboard() {
             bodyQuaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -rotationSpeed * delta))
         }
 
+        if(resetRotation)
+        {
+            
+        }
+
         body.current.setRotation(bodyQuaternion)
         impulse.copy(skateboardDirection).multiplyScalar(currentSpeed)
         body.current.setLinvel({ x: impulse.x, y: body.current.linvel().y, z: impulse.z })
@@ -114,9 +118,13 @@ export default function Skateboard() {
     })
 
     return (
-        <RigidBody ref={body} type='dynamic' colliders={false} position-y={0.5} position-x={2} friction={1} mass={5}>
-            <CuboidCollider args={[0.09, 0.06, 0.38]} />
-            <primitive object={skateboard} position-y={-0.06} />
+        <RigidBody ref={body} type='dynamic' colliders={false} friction={1}>
+            <CuboidCollider args={[0.09, 0.018, 0.38]} position={[0, 0.045, 0]} />
+            <CylinderCollider args={[0.017, 0.028]} rotation={[Math.PI * 0.5, 0, Math.PI * 0.5]} position={[0.073, -0.028, 0.218]} /> 
+            <CylinderCollider args={[0.017, 0.028]} rotation={[Math.PI * 0.5, 0, Math.PI * 0.5]} position={[- 0.073, -0.028, 0.218]} /> 
+            <CylinderCollider args={[0.017, 0.028]} rotation={[Math.PI * 0.5, 0, Math.PI * 0.5]} position={[0.073, -0.028, - 0.218]} /> 
+            <CylinderCollider args={[0.017, 0.028]} rotation={[Math.PI * 0.5, 0, Math.PI * 0.5]} position={[- 0.073, -0.028, - 0.218]} /> 
+            <primitive object={skateboard} position-y={- 0.055}/>
         </RigidBody>
     )
 }
