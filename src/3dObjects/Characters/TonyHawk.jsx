@@ -1,70 +1,50 @@
-import { useAnimations, useGLTF } from '@react-three/drei';
-import React, { useRef } from 'react';
+import { useGLTF } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
+import React, { useEffect, useRef } from 'react';
+import * as THREE from 'three';
 
 export const CharacterTonyHawk = ({boardVisibility = false}) => {
 
-  const { nodes, materials } = useGLTF('./character/tonyhawk/tony_t_pose.glb');
-  const { nodes: idleNodes, animations: idleAnimations } = useGLTF('./character/animations/FE_Main_Idle_BoardSpin.glb');
-  const group = useRef();
-  const allAnimations = [ ...idleAnimations];
-  const { actions } = useAnimations(allAnimations, group);
+  const { scene: modelScene, nodes, materials } = useGLTF('./character/tonyhawk/tony_t_pose.glb');
+  const { animations } = useGLTF('./character/animations/FE_Main_Idle_BoardSpin.glb');
 
-  React.useEffect(() => {
-    console.log(nodes)
-    Object.keys(actions).forEach(action => {
-      actions[action].play();
-    });
-  }, [actions]);
+  const mixer = useRef(null);
+  const actions = useRef({});
+
+  const actionRef = [];
+
+  useEffect(() => {
+    if (animations && modelScene) {
+      mixer.current = new THREE.AnimationMixer(modelScene);
+
+      animations.forEach((clip) => {
+                                        const action = mixer.current.clipAction(clip);
+                                        actionRef.push(action) // Les ajouter dans un tableau referencé plutot
+                                        console.log(clip.name) //liste les actions pour supprimer celless inutiles
+                                        actions.current[clip.name] = action;
+                                        //action.play();
+                                      });
+                                      actionRef[2].play(); //A appeler lors des events
+                                    }
+
+    return () => {
+      if (mixer.current) {
+        mixer.current.stopAllAction();
+      }
+    };
+  }, [animations, modelScene]);
+
+
+  useFrame((state, delta) => {
+    if (mixer.current) {
+      mixer.current.update(delta);
+    }
+  });
+
 
   return (
-    <group ref={group} dispose={null}>
-
-      <group name='skateboard' visible={boardVisibility}>
-            <skinnedMesh
-              geometry={nodes['0000_TonyHawk'].geometry}
-              material={materials.deck_material}
-              skeleton={nodes['0000_TonyHawk'].skeleton}
-            />
-            <skinnedMesh
-              geometry={nodes['0001_TonyHawk'].geometry}
-              material={materials.truck_material}
-              skeleton={nodes['0001_TonyHawk'].skeleton}
-            />
-      </group>
-
-      <group name='character'>
-            <skinnedMesh
-              geometry={nodes['0002_TonyHawk'].geometry}
-              material={materials.eye_material}
-              skeleton={nodes['0002_TonyHawk'].skeleton}
-            />
-            <skinnedMesh
-              geometry={nodes['0003_TonyHawk'].geometry}
-              material={materials.Tony_hair_material}
-              skeleton={nodes['0003_TonyHawk'].skeleton}
-            />
-            <skinnedMesh
-              geometry={nodes['0004_TonyHawk'].geometry}
-              material={materials.clothes_material}
-              skeleton={nodes['0004_TonyHawk'].skeleton}
-            />
-            <skinnedMesh
-              geometry={nodes['0005_TonyHawk'].geometry}
-              material={materials['teeth_material.002']}
-              skeleton={nodes['0005_TonyHawk'].skeleton}
-            />
-            <skinnedMesh
-              geometry={nodes['0006_TonyHawk'].geometry}
-              material={materials.tony_hawk_skin}
-              skeleton={nodes['0006_TonyHawk'].skeleton}
-            />
-            <skinnedMesh
-              geometry={nodes['0007_TonyHawk'].geometry}
-              material={materials.clothes2_alt_material}
-              skeleton={nodes['0007_TonyHawk'].skeleton}
-            />
-      </group>
-
+    <group dispose={null}>
+      <primitive object={modelScene} />
     </group>
   )
 }
