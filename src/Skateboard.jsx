@@ -20,59 +20,69 @@ export default function Skateboard() {
     const acceleration = 0.05
     const deceleration = 0.03
     const rotationSpeed = 3
+
+    const [isInAir, setIsInAir ] = useState(true)
     
     const impulse = new THREE.Vector3()
 
-    const jump = () =>
-    {
+    const jump = () => {
         const origin = body.current.translation()
-        const direction = { x: 0, y: - 1, z: 0 }
+        const direction = { x: 0, y: -1, z: 0 }
         const ray = new rapier.Ray(origin, direction)
         const hit = world.castRay(ray, 10, true)
-        if(hit.toi < 0.15)
-        {
-            body.current.applyImpulse({ x: 0, y: 0.03 , z: 0 })
+        if (hit.toi < 0.15) {
+            body.current.applyImpulse({ x: 0, y: 0.03, z: 0 })
         }
-
     }
 
-    const resetRotation = () =>
-    {
+    const resetRotation = () => {
         const rot = new THREE.Quaternion(0.000008254258318629581, 8.795246344561747e-7, 8.795246344561747e-7, 1)
         const currentRotation = body.current.rotation()
-        
-        if(rot !== currentRotation)
-        {
-            body.current.setRotation(rot)            
+        if (!rot.equals(currentRotation)) {
+            body.current.setRotation(rot)
         }
     }
 
-    useEffect(() =>
-    {
-        subscribeKeys(
-            // Selector
+    const kickFlip = () => {
+        if (isInAir) {
+            console.log('Performing kickflip')
+            body.current.applyTorqueImpulse({ x: 0, y: 0, z: -0.0004 })
+        } else {
+            console.log('Cannot kickflip: not in air')
+        }
+    }
+
+    useEffect(() => {
+        const unsubscribeJump = subscribeKeys(
             (state) => state.jump,
-            // Call Function
-            (value) =>
-            {
-                if(value)
-                {
+            (value) => {
+                if (value) {
                     jump()
                 }
             }
-        ),
-        subscribeKeys(
-            // Selector
+        )
+        const unsubscribeResetRotation = subscribeKeys(
             (state) => state.resetRotation,
-            // Call Function
-            (value) =>
-            {
-                if(value)
-                {
+            (value) => {
+                if (value) {
                     resetRotation()
                 }
             }
         )
+        const unsubscribeKickFlip = subscribeKeys(
+            (state) => state.kickFlip,
+            (value) => {
+                if (value) {
+                    kickFlip()
+                }
+            }
+        )
+
+        return () => {
+            unsubscribeJump()
+            unsubscribeResetRotation()
+            unsubscribeKickFlip()
+        }
     }, [])
 
     useFrame((state, delta) => {
@@ -102,7 +112,7 @@ export default function Skateboard() {
         /**
          * skateboard controls
          */
-        const { forward, backward, leftward, rightward, jump, resetRotation } = getKeys()
+        const { forward, backward, leftward, rightward, jump, kickFlip } = getKeys()
 
         const bodyQuaternion = new THREE.Quaternion()
         bodyQuaternion.copy(body.current.rotation())
@@ -129,6 +139,10 @@ export default function Skateboard() {
             bodyQuaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -rotationSpeed * delta))
         }
 
+        if (jump || kickFlip) {
+            body.current.wakeUp()
+        }
+
         body.current.setRotation(bodyQuaternion)
         impulse.copy(skateboardDirection).multiplyScalar(currentSpeed)
         body.current.setLinvel({ x: impulse.x, y: body.current.linvel().y, z: impulse.z })
@@ -136,13 +150,26 @@ export default function Skateboard() {
     })
 
     return (
-        <RigidBody ref={body} type='dynamic' colliders={false} friction={1}>
+        <RigidBody 
+            ref={body} 
+            type='dynamic' 
+            colliders={false} 
+            friction={1} 
+            onCollisionEnter={() => {
+                console.log("Collision Enter - Grounded");
+                setIsInAir(false);
+            }}
+            onCollisionExit={() => {
+                console.log("Collision Exit - In Air");
+                setIsInAir(true);
+            }}
+        >
             <CuboidCollider args={[0.09, 0.018, 0.38]} position={[0, 0.045, 0]} />
             <CylinderCollider args={[0.017, 0.028]} rotation={[Math.PI * 0.5, 0, Math.PI * 0.5]} position={[0.073, -0.028, 0.218]} /> 
-            <CylinderCollider args={[0.017, 0.028]} rotation={[Math.PI * 0.5, 0, Math.PI * 0.5]} position={[- 0.073, -0.028, 0.218]} /> 
-            <CylinderCollider args={[0.017, 0.028]} rotation={[Math.PI * 0.5, 0, Math.PI * 0.5]} position={[0.073, -0.028, - 0.218]} /> 
-            <CylinderCollider args={[0.017, 0.028]} rotation={[Math.PI * 0.5, 0, Math.PI * 0.5]} position={[- 0.073, -0.028, - 0.218]} /> 
-            <primitive object={skateboard} position-y={- 0.055}/>
+            <CylinderCollider args={[0.017, 0.028]} rotation={[Math.PI * 0.5, 0, Math.PI * 0.5]} position={[-0.073, -0.028, 0.218]} /> 
+            <CylinderCollider args={[0.017, 0.028]} rotation={[Math.PI * 0.5, 0, Math.PI * 0.5]} position={[0.073, -0.028, -0.218]} /> 
+            <CylinderCollider args={[0.017, 0.028]} rotation={[Math.PI * 0.5, 0, Math.PI * 0.5]} position={[-0.073, -0.028, -0.218]} /> 
+            <primitive object={skateboard} position-y={-0.055} />
         </RigidBody>
     )
 }

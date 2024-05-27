@@ -12,7 +12,8 @@ const keys = [
     { name: 'leftward', keys: [ 'ArrowLeft', 'KeyA' ] },
     { name: 'rightward', keys: [ 'ArrowRight', 'KeyD' ] },
     { name: 'jump', keys: [ 'Space' ] },
-    {name: 'resetRotation', keys: [ 'KeyR' ]}
+    {name: 'resetRotation', keys: [ 'KeyR' ]},
+    {name: 'kickFlip', keys: [ 'KeyK' ]},
 ]
 
 root.render(
