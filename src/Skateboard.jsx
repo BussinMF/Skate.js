@@ -33,7 +33,18 @@ export default function Skateboard() {
         {
             body.current.applyImpulse({ x: 0, y: 0.03 , z: 0 })
         }
-        console.log(hit.toi)
+
+    }
+
+    const resetRotation = () =>
+    {
+        const rot = new THREE.Quaternion(0.000008254258318629581, 8.795246344561747e-7, 8.795246344561747e-7, 1)
+        const currentRotation = body.current.rotation()
+        
+        if(rot !== currentRotation)
+        {
+            body.current.setRotation(rot)            
+        }
     }
 
     useEffect(() =>
@@ -47,6 +58,18 @@ export default function Skateboard() {
                 if(value)
                 {
                     jump()
+                }
+            }
+        ),
+        subscribeKeys(
+            // Selector
+            (state) => state.resetRotation,
+            // Call Function
+            (value) =>
+            {
+                if(value)
+                {
+                    resetRotation()
                 }
             }
         )
@@ -104,11 +127,6 @@ export default function Skateboard() {
 
         if (rightward) {
             bodyQuaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -rotationSpeed * delta))
-        }
-
-        if(resetRotation)
-        {
-            
         }
 
         body.current.setRotation(bodyQuaternion)
