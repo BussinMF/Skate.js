@@ -114,10 +114,10 @@ export default function Skateboard() {
          */
         const { forward, backward, leftward, rightward, jump, kickFlip } = getKeys()
 
-        const bodyQuaternion = new THREE.Quaternion()
-        bodyQuaternion.copy(body.current.rotation())
+        const currentRotation = new THREE.Quaternion()
+        currentRotation.copy(body.current.rotation())
 
-        const skateboardDirection = new THREE.Vector3(0, 0, -1).applyQuaternion(bodyQuaternion)
+        const skateboardDirection = new THREE.Vector3(0, 0, -1).applyQuaternion(currentRotation)
 
         if (forward) {
             currentSpeed = Math.min(currentSpeed + acceleration * delta * 60, maxSpeed)
@@ -132,18 +132,18 @@ export default function Skateboard() {
         }
 
         if (leftward) {
-            bodyQuaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rotationSpeed * delta))
+            currentRotation.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rotationSpeed * delta))
         }
 
         if (rightward) {
-            bodyQuaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -rotationSpeed * delta))
+            currentRotation.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -rotationSpeed * delta))
         }
 
         if (jump || kickFlip) {
             body.current.wakeUp()
         }
 
-        body.current.setRotation(bodyQuaternion)
+        body.current.setRotation(currentRotation)
         impulse.copy(skateboardDirection).multiplyScalar(currentSpeed)
         body.current.setLinvel({ x: impulse.x, y: body.current.linvel().y, z: impulse.z })
         body.current.setLinearDamping(1)
