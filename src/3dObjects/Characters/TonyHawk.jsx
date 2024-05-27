@@ -3,42 +3,44 @@ import { useFrame } from '@react-three/fiber';
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
-export const CharacterTonyHawk = ({boardVisibility = false}) => {
+export const CharacterTonyHawk = ({boardVisibility = false, animationsObject, events}) => {
 
-  const { scene: modelScene, nodes, materials } = useGLTF('./character/tonyhawk/tony_t_pose.glb');
-  const { animations } = useGLTF('./character/animations/FE_Main_Idle_BoardSpin.glb');
+  const { scene: modelScene, nodes, materials, animations: noAnim } = useGLTF('./character/tonyhawk/tony_t_pose.glb');
 
   const mixer = useRef(null);
-  const actions = useRef({});
 
   const actionRef = [];
+useEffect(()=>{
+              if(noAnim.length>0){
+                console.error("Please delete animations in this file.")
+              }
+              },[]);
+  
+  useEffect(()=>{
+    if(Object.keys(animationsObject).length > 0 && modelScene){
+       mixer.current = new THREE.AnimationMixer(modelScene);
+       Object.entries(animationsObject).forEach(([animName]) => {
+        animationsObject[animName].action = mixer.current.clipAction(animationsObject[animName][0]);
+        })
+    }
+  },[animationsObject, modelScene])
 
-  useEffect(() => {
-    if (animations && modelScene) {
-      mixer.current = new THREE.AnimationMixer(modelScene);
+  useEffect(()=>{
+    Object.entries(events).forEach(([eventName, isActive]) => {
+                if(isActive){ animationsObject[eventName].action.play()}
+                })
 
-      animations.forEach((clip) => {
-                                        const action = mixer.current.clipAction(clip);
-                                        actionRef.push(action) // Les ajouter dans un tableau referencé plutot
-                                        console.log(clip.name) //liste les actions pour supprimer celless inutiles
-                                        actions.current[clip.name] = action;
-                                        //action.play();
-                                      });
-                                      actionRef[2].play(); //A appeler lors des events
-                                    }
+                  return () => {
+              if (mixer.current) {
+                mixer.current.stopAllAction();
+              }
+            };
+  },[events])
 
-    return () => {
-      if (mixer.current) {
-        mixer.current.stopAllAction();
-      }
-    };
-  }, [animations, modelScene]);
 
 
   useFrame((state, delta) => {
-    if (mixer.current) {
-      mixer.current.update(delta);
-    }
+    if (mixer.current) { mixer.current.update(delta); }
   });
 
 
@@ -50,5 +52,3 @@ export const CharacterTonyHawk = ({boardVisibility = false}) => {
 }
 
 useGLTF.preload('./character/tonyhawk/tonyHawk.glb');
-useGLTF.preload('./character/animations/FE_Main_Idle_BoardSpin.glb');
-
